@@ -1,0 +1,76 @@
+<script src="https://carbonbot.paygreen.fr/1.2/carbon-bot.js"></script>
+<script>
+    // Create the widget placeholder
+    const paymentMethod = document.getElementById("payment-method");
+    const div = document.createElement('div');
+
+    div.setAttribute('data-paygreen-carbon-banner', "");
+
+    paymentMethod.parentNode.insertBefore(div, paymentMethod);
+
+    {if $app->debug}
+        console.log('user:{$paygreenUser}, footprint:{$paygreenFootprintId}, token:{$paygreenToken}');
+    {/if}
+
+    // Initialize the Carbon Bot Cf. https://github.com/PayGreen/carbon-bot-doc
+    carbonBot.init({
+        endpoint: "https://api-climatekit.paygreen.fr",
+        testMode: {$paygreenTestMode},
+        locale: "{lang attr='code'}",
+        shopName: "{config key='store_name'}",
+        bot: {
+            user: {$paygreenUser},
+            footprint: "{$paygreenFootprintId}",
+            token: "{$paygreenToken}",
+            position: "right",
+            colors: {
+                primary: "#556B2F",
+            },
+            displayed: true
+        },
+        banner: {
+            addContributionAction: function(price) {
+                window.location.replace(
+                    "{url path='/paygreen/compensation/add' price='__PRICE__'}".replace('__PRICE__', price)
+                );
+            },
+            removeContributionAction: function() {
+                window.location.replace(
+                    "{url path='/paygreen/compensation/remove'}"
+                );
+            },
+            hasContributionInCart: {($paygreenContributionInCart) ? 'true' : 'false'}, // boolean, whether the contribution is in the cart or not
+            displayed: true
+        },
+        // Cart content
+        cart: {
+            price: {cart attr="total_taxed_price"}, // current cart price in cent
+            weight: {cart attr="weight"}, // current cart weight in kg
+            shippingFromAddress: {
+                street: "{config key='store_address1'}",
+                city: "{config key='store_city'}",
+                postcode: "{config key='store_zipcode'}",
+                country: "{loop type="country" name="dsf" id={config key="store_country"}}{$TITLE}{/loop}"
+            },
+            shippingToAddress: {
+                {loop type="address" name="delivery-address" id={order attr="delivery_address"}}
+                street: '{$ADDRESS1|replace:"'":"\\'"} {$ADDRESS2|replace:"'":"\\'"} {$ADDRESS3|replace:"'":"\\'"}',
+                    city: '{$CITY|replace:"'":"\\'"}',
+                    postcode: '{$ZIPCODE}',
+                    country: "{loop type="country" name="dsf" id=$COUNTRY}{$TITLE}{/loop}"
+                {/loop}
+            },
+            transportationExternalId: "1-28022",
+            deliveryService : "{loop type="module" name="d" id={order attr="delivery_module"}}{$TITLE}{/loop}", // optionnal: set "Colissimo" if you use it
+            items: [
+                {loop type="cart" name="df"}
+                {
+                    productExternalReference: "{$REF}",
+                    quantity: {$QUANTITY},
+                    exTaxPriceInCents: {$TOTAL_PRICE} * 100 // price without tax in cent
+                }{if $LOOP_COUNT < $LOOP_TOTAL},{/if}
+                {/loop}
+            ]
+        }
+    });
+</script>

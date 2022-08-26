@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<routes xmlns="http://symfony.com/schema/routing"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
+
+    <route id="paygreenClimatekit.config" path="/admin/module/paygreenClimatekit/configure" methods="post">
+        <default key="_controller">PayGreenClimateKit\Controller\Admin\ConfigureController::configure</default>
+    </route>
+
+    <route id="paygreenClimatekit.download.catalog" path="/admin/module/paygreenClimatekit/downloadCatalog">
+        <default key="_controller">PayGreenClimateKit\Controller\Admin\ConfigureController::downloadCatalog</default>
+    </route>
+
+    <route id="paygreenClimatekit.addCarbonCompesation" path="/paygreen/compensation/add">
+        <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::addCarbonCompensationToCart</default>
+    </route>
+
+    <route id="paygreenClimatekit.removeCarbonCompensation" path="/paygreen/compensation/remove">
+      <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::removeCarbonCompensationFromCart</default>
+    </route>
+</routes>
