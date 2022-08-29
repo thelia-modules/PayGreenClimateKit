@@ -83,19 +83,15 @@ class PaygreenApiService
         if (null === $fpId = $session->get(self::FOOTPRINT_ID_SESSION_VAR)) {
             $fpId = md5(uniqid('paygreen', true));
 
-            $session->set('paygreen.user.footprintid', $fpId);
+            $response = $this->climateClient->createEmptyFootprint($fpId);
+
+            // We store the ID in the user session only if it was successfully created on Paygreen, side.
+            if ($this->checkApiResponse('createEmptyFootprint', $response)) {
+                $session->set('paygreen.user.footprintid', $fpId);
+            }
         }
 
         return $fpId;
-    }
-
-
-    /**
-     * @throws \Exception
-     */
-    public function createEmptyFootprint(): void
-    {
-        $this->getClimateKitClient()->createEmptyFootprint($this->getFootPrintId());
     }
 
     /**
@@ -103,7 +99,9 @@ class PaygreenApiService
      */
     public function closeFootprint(string $footprintId, string $status): void
     {
-        $this->getClimateKitClient()->closeFootprint($footprintId, $status);
+        $response = $this->getClimateKitClient()->closeFootprint($footprintId, $status);
+
+        $this->checkApiResponse('closeFootprint', $response);
 
         // Remove Footprint ID from session, we will create a new one as needed.
         $this->clearFootPrintId();
@@ -115,7 +113,7 @@ class PaygreenApiService
      */
     public function clearFootPrintId(): void
     {
-        $this->session->remove(self::FOOTPRINT_ID_SESSION_VAR);
+        $this->requestStack->getCurrentRequest()->getSession()->remove(self::FOOTPRINT_ID_SESSION_VAR);
     }
 
     /**
@@ -125,7 +123,10 @@ class PaygreenApiService
      */
     public function addWebBrowsingData(WebBrowsingData $webBrowsingData): void
     {
-        $this->getClimateKitClient()->addWebBrowsingData($this->getFootPrintId(), $webBrowsingData);
+        $response = $this->getClimateKitClient()->addWebBrowsingData($this->getFootPrintId(), $webBrowsingData);
+
+        $this->checkApiResponse('addWebBrowsingData', $response);
+
     }
 
     /**
@@ -176,5 +177,30 @@ class PaygreenApiService
         }
 
         return $this->climateClient;
+    }
+
+    /**
+     * Check an API call response, and log a message on failure.
+     *
+     * @param $response
+     * @return bool
+     */
+    protected function checkApiResponse(string $serviceName, $response): bool
+    {
+        // @todo
+        $responseData = json_decode($response->getBody()->getContents());
+
+        if ($responseData && isset($responseData->status) && (int) $responseData->status !== 200) {
+            Tlog::getInstance()->error(
+                "Call to Paygreen service $serviceName failed : status:" . $responseData->status
+                . ", reason:" . $responseData->title
+                . ", detail:" . $responseData->detail
+            );
+
+            return false;
+        }
+
+
+        return true;
     }
 }

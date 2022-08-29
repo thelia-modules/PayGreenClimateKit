@@ -57,7 +57,7 @@
                 street: '{$ADDRESS1|replace:"'":"\\'"} {$ADDRESS2|replace:"'":"\\'"} {$ADDRESS3|replace:"'":"\\'"}',
                     city: '{$CITY|replace:"'":"\\'"}',
                     postcode: '{$ZIPCODE}',
-                    country: "{loop type="country" name="dsf" id=$COUNTRY}{$TITLE}{/loop}"
+                    country: "{loop type="country" name="dsf" id=$COUNTRY limit=1}{$TITLE}{/loop}"
                 {/loop}
             },
             transportationExternalId: "1-28022",

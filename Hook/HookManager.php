@@ -53,6 +53,12 @@ class HookManager extends BaseHook
                     "method" => "onModuleConfigure"
                 ]
             ],
+            "order-edit.cart-bottom" => [
+                [
+                    "type" => "back",
+                    "method" => "onOrderEditCartBottom"
+                ]
+            ],
             "order-invoice.javascript-initialization" => [
                 [
                     "type" => "front",
@@ -78,6 +84,13 @@ class HookManager extends BaseHook
         );
     }
 
+    public function onOrderEditCartBottom(HookRenderEvent $event): void
+    {
+        $event->add(
+            $this->render('paygreen-climatekit/order-edit.cart-bottom.html')
+        );
+    }
+
     /**
      * @param HookRenderEvent $event
      * @return void
@@ -86,9 +99,6 @@ class HookManager extends BaseHook
     {
         try {
             $userId = $this->climateClient->getCurrentUserId();
-
-            // Créer le footprint carbone
-            $this->climateClient->createEmptyFootprint();
 
             $vars = [
                 'paygreenUser' => $userId,
