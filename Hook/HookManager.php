@@ -14,15 +14,55 @@
 
 namespace PayGreenClimateKit\Hook;
 
-use Http\Client\Curl\Client;
-use Paygreen\Sdk\Climate\V2\Environment;
 use PayGreenClimateKit\PayGreenClimateKit;
+use PayGreenClimateKit\Service\PaygreenApiService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
+use Thelia\Core\Template\Assets\AssetResolverInterface;
 use Thelia\Log\Tlog;
+use TheliaSmarty\Template\SmartyParser;
 
 class HookManager extends BaseHook
 {
+    protected PaygreenApiService $climateClient;
+
+    public function __construct(
+        SmartyParser $parser,
+        AssetResolverInterface $resolver,
+        EventDispatcherInterface $eventDispatcher,
+        PaygreenApiService $climateClient)
+    {
+        parent::__construct($parser, $resolver, $eventDispatcher);
+
+        $this->climateClient = $climateClient;
+    }
+
+    /**
+     * On déclare ici les hooks traités par cette classe. De cette manière, on peut déclarer le hook
+     * comme un service normal dans le config.xml, et lui passer des données
+     *
+     * @return \string[][][]
+     */
+    public static function getSubscribedHooks()
+    {
+        return [
+            "module.configuration" => [
+                [
+                    "type" => "back",
+                    "method" => "onModuleConfigure"
+                ]
+            ],
+            "order-invoice.javascript-initialization" => [
+                [
+                    "type" => "front",
+                    "method" => "onOrderInvoiceJavascript"
+                ]
+            ]
+        ];
+    }
+
+
     public function onModuleConfigure(HookRenderEvent $event): void
     {
         $vars = [
@@ -38,73 +78,35 @@ class HookManager extends BaseHook
         );
     }
 
+    /**
+     * @param HookRenderEvent $event
+     * @return void
+     */
     public function onOrderInvoiceJavascript(HookRenderEvent $event): void
     {
-        $accountName = PayGreenClimateKit::getConfigValue('accountName');
-        $userName = PayGreenClimateKit::getConfigValue('userName');
-        $password = PayGreenClimateKit::getConfigValue('password');
-        $clientId = PayGreenClimateKit::getConfigValue('clientId');
+        try {
+            $userId = $this->climateClient->getCurrentUserId();
 
-        $curl = new Client();
+            // Créer le footprint carbone
+            $this->climateClient->createEmptyFootprint();
 
-        $environment = new Environment(
-            $clientId,
-            Environment::ENVIRONMENT_PRODUCTION,
-            Environment::API_VERSION_2
-        );
+            $vars = [
+                'paygreenUser' => $userId,
+                'paygreenToken' => $this->climateClient->getAccessToken(),
+                'paygreenFootprintId' => $this->climateClient->getFootPrintId(),
+                'paygreenTestMode' => $this->climateClient->isTestMode(),
+                'paygreenContributionInCart' =>
+                    null !== PayGreenClimateKit::findCompensationItemInCart(
+                        $this->getSession(),
+                        $this->dispatcher
+                    )
+            ];
 
-        // @todo configurable
-        $testMode = true;
-
-        if ($testMode) {
-            $environment->setTestMode(true);
+            $event->add(
+                $this->render('paygreen-climatekit/order-invoice.javascript-initialization.html', $vars)
+            );
+        } catch (\Exception $ex) {
+            Tlog::getInstance()->error("Failed to get Climate data from PayGreen API: " . $ex->getMessage());
         }
-
-        $climateKitClient = new \Paygreen\Sdk\Climate\V2\Client($curl, $environment);
-
-        // Se connecter à PayGreen
-        $response = $climateKitClient->login($accountName, $userName, $password);
-        $responseData = json_decode($response->getBody()->getContents());
-
-        if (false === $responseData || !isset($responseData->access_token)) {
-            Tlog::getInstance()->error('Failed to log to PayGreen climate kit, please check module configuration: '.print_r($responseData, 1));
-
-            return;
-        }
-
-        $accessToken = $responseData->access_token;
-        $climateKitClient->setBearer($accessToken);
-
-        // Récupérer les infos utiulisateur (l'ID notamment)
-        $response = $climateKitClient->getCurrentUserInfos();
-        $responseData = json_decode($response->getBody()->getContents());
-
-        if (false === $responseData || !isset($responseData->idUser)) {
-            Tlog::getInstance()->error('Failed to get PayGreen climate kit user info:'.print_r($responseData, 1));
-
-            return;
-        }
-
-        $userId = $responseData->idUser;
-
-        // Créer le footprint carbone
-        $footPrintId = $this->getRequest()->getSession()->getId();
-
-        $climateKitClient->createEmptyFootprint($footPrintId);
-
-        $vars = [
-            'paygreenUser' => $userId,
-            'paygreenToken' => $accessToken,
-            'paygreenFootprintId' => $footPrintId,
-            'paygreenTestMode' => $testMode,
-            'paygreenContributionInCart' => null !== PayGreenClimateKit::findCompensationItemInCart(
-                $this->getSession(),
-                $this->dispatcher
-            ),
-        ];
-
-        $event->add(
-            $this->render('paygreen-climatekit/order-invoice.javascript-initialization.html', $vars)
-        );
     }
 }

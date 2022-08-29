@@ -12,11 +12,11 @@
         <default key="_controller">PayGreenClimateKit\Controller\Admin\ConfigureController::downloadCatalog</default>
     </route>
 
-    <route id="paygreenClimatekit.addCarbonCompesation" path="/paygreen/compensation/add">
-        <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::addCarbonCompensationToCart</default>
+    <route id="paygreenClimatekit.addCarbonCompensation" path="/paygreen/compensation/add">
+        <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::addCarbonCompensationToCartAction</default>
     </route>
 
     <route id="paygreenClimatekit.removeCarbonCompensation" path="/paygreen/compensation/remove">
-      <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::removeCarbonCompensationFromCart</default>
+      <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::removeCarbonCompensationFromCartAction</default>
     </route>
 </routes>

@@ -121,44 +121,4 @@ class ConfigureController extends BaseAdminController
         $response->headers->set('Content-Disposition', 'attachment; filename="catalog.csv"');
         $response->send();
     }
-
-    public function activatePaygreen(): void
-    {
-        $accountName = PayGreenClimateKit::getConfigValue('accountName');
-        $userName = PayGreenClimateKit::getConfigValue('userName');
-        $password = PayGreenClimateKit::getConfigValue('password');
-        $clientId = PayGreenClimateKit::getConfigValue('clientId');
-
-        $curl = new Client();
-
-        $environment = new \Paygreen\Sdk\Climate\V2\Environment(
-            $clientId,
-            'PRODUCTION',
-            2
-        );
-
-        $environment->setTestMode(true);
-
-        $client = new \Paygreen\Sdk\Climate\V2\Client($curl, $environment);
-
-        $response = $client->login($accountName, $userName, $password);
-        $responseData = json_decode($response->getBody()->getContents());
-        dump($responseData);
-
-        $client->setBearer($responseData->access_token);
-
-        $response = $client->refresh('openstudio-toulouse', $responseData->refresh_token);
-        $responseData = json_decode($response->getBody()->getContents());
-        dump($responseData);
-
-//        $client->setBearer($responseData->access_token);
-
-        $response = $client->getCurrentUserInfos();
-        $responseData = json_decode($response->getBody()->getContents());
-        dump($responseData);
-
-        $response = $client->createEmptyFootprint('my-footprint-id');
-        $responseData = json_decode($response->getBody()->getContents());
-        dump($responseData);
-    }
 }

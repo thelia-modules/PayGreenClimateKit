@@ -1,30 +1,34 @@
 <?php
-/*************************************************************************************/
-/*      This file is part of the Thelia package.                                     */
-/*                                                                                   */
-/*      Copyright (c) OpenStudio                                                     */
-/*      email : dev@thelia.net                                                       */
-/*      web : http://www.thelia.net                                                  */
-/*                                                                                   */
-/*      For the full copyright and license information, please view the LICENSE.txt  */
-/*      file that was distributed with this source code.                             */
-/*************************************************************************************/
+
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace PayGreenClimateKit;
 
 use Propel\Runtime\Connection\ConnectionInterface;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Thelia\Core\Event\Category\CategoryCreateEvent;
 use Thelia\Core\Event\Category\CategoryDeleteEvent;
 use Thelia\Core\Event\Category\CategoryUpdateEvent;
+use Thelia\Core\Event\File\FileCreateOrUpdateEvent;
 use Thelia\Core\Event\Product\ProductCreateEvent;
 use Thelia\Core\Event\Product\ProductDeleteEvent;
 use Thelia\Core\Event\Product\ProductUpdateEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\Session\Session;
+use Thelia\Files\FileConfiguration;
+use Thelia\Files\FileManager;
+use Thelia\Install\Database;
 use Thelia\Model\CartItem;
-use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
 use Thelia\Model\Currency;
 use Thelia\Model\Lang;
@@ -35,15 +39,12 @@ use Thelia\Module\BaseModule;
 class PayGreenClimateKit extends BaseModule
 {
     /** @var string */
-    const DOMAIN_NAME = 'paygreenclimatekit';
+    public const DOMAIN_NAME = 'paygreenclimatekit';
 
     public const COMPENSATION_PRODUCT_REF = 'CLIMATEKIT-COMPENSATION';
 
     /**
-     * Create the product and the category that will be added to the cart to compensate carbon cost
-     *
-     * @param ConnectionInterface|null $con
-     * @return void
+     * Create the product and the category that will be added to the cart to compensate carbon cost.
      */
     public function postActivation(ConnectionInterface $con = null): void
     {
@@ -62,7 +63,7 @@ class PayGreenClimateKit extends BaseModule
 
         $this->getDispatcher()->dispatch($categoryCreateEvent, TheliaEvents::CATEGORY_CREATE);
 
-        // Create the french version
+        // Create the French version
         $categoryUpdateEvent = (new CategoryUpdateEvent($categoryCreateEvent->getCategory()->getId()))
             ->setParent(0)
             ->setVisible(false)
@@ -83,7 +84,7 @@ class PayGreenClimateKit extends BaseModule
             ->setLocale('en_US')
             ->setTitle('Carbon compensation for this order')
             ->setVisible(false)
-            ->setVirtual(false)
+            ->setVirtual(true)
             ->setTaxRuleId($taxRuleId)
             ->setDefaultCategory($categoryCreateEvent->getCategory()->getId())
             ->setBasePrice(0)
@@ -92,26 +93,66 @@ class PayGreenClimateKit extends BaseModule
 
         $this->getDispatcher()->dispatch($createProductEvent, TheliaEvents::PRODUCT_CREATE);
 
+        // Update product Info
         $updateProductEvent = (new ProductUpdateEvent($createProductEvent->getProduct()->getId()))
             ->setRef(self::COMPENSATION_PRODUCT_REF)
             ->setLocale('fr_FR')
             ->setTitle('Compensation carbone pour votre commande')
             ->setVisible(false)
-            ->setVirtual(false)
+            ->setVirtual(true)
             ->setTaxRuleId($taxRuleId)
             ->setDefaultCategory($categoryCreateEvent->getCategory()->getId())
             ->setBasePrice(0)
             ->setCurrencyId($currencyId)
-            ->setBaseWeight(0);
+            ->setBaseWeight(0)
+            ;
 
         $this->getDispatcher()->dispatch($updateProductEvent, TheliaEvents::PRODUCT_UPDATE);
+
+        // Infinite stock
+        $updateProductEvent->getProduct()->getDefaultSaleElements()->setQuantity(PHP_INT_MAX);
+
+        // Add product image
+        $imagePath = __DIR__.DS.'Config'.DS.'images'.DS.'climate-kit-image.png';
+
+        @copy($imagePath, $imagePath.'.tmp');
+
+        $imagePath .= '.tmp';
+
+        /** @var FileManager $fileManager */
+        $fileManager = $this->container->get('thelia.file_manager');
+
+        $config = FileConfiguration::getImageConfig();
+
+        $fileModel = $fileManager->getModelInstance($config['objectType'], 'product');
+
+        $parentModel = $fileModel->getParentFileModel();
+
+        $defaultTitle = 'ClimateKit logo';
+
+        $fileModel
+            ->setParentId($createProductEvent->getProduct()->getId())
+            ->setLocale(Lang::getDefaultLanguage()->getLocale())
+            ->setTitle($defaultTitle)
+        ;
+
+        $fileCreateOrUpdateEvent = new FileCreateOrUpdateEvent($createProductEvent->getProduct()->getId());
+        $fileCreateOrUpdateEvent
+            ->setModel($fileModel)
+            ->setUploadedFile(new UploadedFile($imagePath, 'climate-kit-image.png'))
+            ->setParentName($parentModel->getTitle())
+        ;
+
+        $this->getDispatcher()->dispatch($fileCreateOrUpdateEvent, TheliaEvents::IMAGE_SAVE);
+
+        // Init database.
+        $database = new Database($con);
+
+        $database->insertSql(null, [__DIR__.'/Config/TheliaMain.sql']);
     }
 
     /**
-     *  Remove compensation product and category
-     *
-     * @param ConnectionInterface|null $con
-     * @return void
+     *  Remove compensation product and category.
      */
     public function postDeactivation(ConnectionInterface $con = null): void
     {
@@ -133,17 +174,21 @@ class PayGreenClimateKit extends BaseModule
         }
     }
 
+    public static function configureServices(ServicesConfigurator $servicesConfigurator): void
+    {
+        $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
+        ->exclude([THELIA_MODULE_DIR.ucfirst(self::getModuleCode()).'/I18n/*'])
+        ->autowire(true)
+        ->autoconfigure(true);
+    }
 
     /**
-     * @param Session $session
-     * @param EventDispatcherInterface $dispatcher
-     * @return CartItem|null
      * @throws \Propel\Runtime\Exception\PropelException
      */
     public static function findCompensationItemInCart(Session $session, EventDispatcherInterface $dispatcher): ?CartItem
     {
         foreach ($session->getSessionCart($dispatcher)->getCartItems() as $cartItem) {
-            if ($cartItem->getProduct()->getRef() === PayGreenClimateKit::COMPENSATION_PRODUCT_REF) {
+            if ($cartItem->getProduct()->getRef() === self::COMPENSATION_PRODUCT_REF) {
                 return $cartItem;
             }
         }

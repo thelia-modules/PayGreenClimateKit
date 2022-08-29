@@ -4,16 +4,16 @@
         xsi:schemaLocation="http://thelia.net/schema/dic/module http://thelia.net/schema/dic/module/module-2_2.xsd">
     <fullnamespace>PayGreenClimateKit\PayGreenClimateKit</fullnamespace>
     <descriptive locale="en_US">
-        <title>A widget to offset the cost of the carbon footprint</title>
+        <title>Offset the carbon cost of your customers' purchases</title>
     </descriptive>
     <descriptive locale="fr_FR">
-        <title>Widget permettant de compenser le coût carbone dez vos achats</title>
+        <title>Compensez le coût carbone des achats de vos clients</title>
     </descriptive>
     <languages>
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>2.4</version>
+    <version>1.0.0</version>
     <authors>
         <author>
             <name>Théo ROBILLARD</name>

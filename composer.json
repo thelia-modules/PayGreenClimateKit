@@ -4,9 +4,17 @@
   "license": "LGPL-3.0-or-later",
   "type": "thelia-module",
   "require": {
-    "thelia/installer": "~1.1"
+    "thelia/installer": "~1.1",
+    "php-http/curl-client": "^2.2",
+    "paygreen/paygreen-php": "^1.2",
+    "mobiledetect/mobiledetectlib": "^2.8"
   },
   "extra": {
     "installer-name": "PayGreenClimateKit"
+  },
+  "config": {
+    "allow-plugins": {
+      "thelia/installer": true
+    }
   }
 }

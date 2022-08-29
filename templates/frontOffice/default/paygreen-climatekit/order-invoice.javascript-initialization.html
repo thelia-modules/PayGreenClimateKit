@@ -15,7 +15,7 @@
     // Initialize the Carbon Bot Cf. https://github.com/PayGreen/carbon-bot-doc
     carbonBot.init({
         endpoint: "https://api-climatekit.paygreen.fr",
-        testMode: {$paygreenTestMode},
+        testMode: {($paygreenTestMode) ? 'true' : 'false'},
         locale: "{lang attr='code'}",
         shopName: "{config key='store_name'}",
         bot: {
