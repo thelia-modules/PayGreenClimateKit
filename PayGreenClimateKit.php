@@ -105,12 +105,8 @@ class PayGreenClimateKit extends BaseModule
             ->setBasePrice(0)
             ->setCurrencyId($currencyId)
             ->setBaseWeight(0)
+            ->setQuantity(5000000) // Large amount toi provide infinite stock (kind of)
             ;
-
-        $this->getDispatcher()->dispatch($updateProductEvent, TheliaEvents::PRODUCT_UPDATE);
-
-        // Infinite stock
-        $updateProductEvent->getProduct()->getDefaultSaleElements()->setQuantity(PHP_INT_MAX);
 
         // Add product image
         $imagePath = __DIR__.DS.'Config'.DS.'images'.DS.'climate-kit-image.png';

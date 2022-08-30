@@ -12,6 +12,14 @@
         <default key="_controller">PayGreenClimateKit\Controller\Admin\ConfigureController::downloadCatalog</default>
     </route>
 
+    <route id="paygreenClimatekit.send.catalog" path="/admin/module/paygreenClimatekit/sendCatalog">
+        <default key="_controller">PayGreenClimateKit\Controller\Admin\ConfigureController::sendCatalog</default>
+    </route>
+
+    <route id="paygreenClimatekit.clearFootprint" path="/paygreen/clear-footprint">
+        <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::clearFootprint</default>
+    </route>
+
     <route id="paygreenClimatekit.addCarbonCompensation" path="/paygreen/compensation/add">
         <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::addCarbonCompensationToCartAction</default>
     </route>

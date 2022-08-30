@@ -81,12 +81,18 @@ class ConfigForm extends BaseForm
                         'help' => $translator->trans('You can request your Client ID from Paygreen', [], PayGreenClimateKit::DOMAIN_NAME),
                     ],
                 ]
-            )
-            ->add(
-                'download',
-                ButtonType::class,
+            )->add(
+                'transportationExternalId',
+                TextType::class,
                 [
-                    'label' => $translator->trans('download the catalog in csv format', [], PayGreenClimateKit::DOMAIN_NAME),
+                    'constraints' => [
+                        new NotBlank(),
+                    ],
+                    'label' => $translator->trans('Identification for the emission factor of deliveries', [], PayGreenClimateKit::DOMAIN_NAME),
+                    'label_attr' => [
+                        'for' => 'transportationExternalId',
+                        'help' => $translator->trans('An identifiers to define carbon emission factor for order delivery. 1-28022 is a good choice for truck based deliveries.', [], PayGreenClimateKit::DOMAIN_NAME),
+                    ],
                 ]
             )
             ->add(
@@ -97,8 +103,8 @@ class ConfigForm extends BaseForm
                         new NotBlank(),
                     ],
                     'choices' => [
-                        'TEST' => $translator->trans('Test', [], PayGreenClimateKit::DOMAIN_NAME),
-                        'PRODUCTION' => $translator->trans('Production', [], PayGreenClimateKit::DOMAIN_NAME),
+                        $translator->trans('Test', [], PayGreenClimateKit::DOMAIN_NAME) => 'TEST',
+                        $translator->trans('Production', [], PayGreenClimateKit::DOMAIN_NAME) => 'PRODUCTION',
                     ],
                     'label' => $translator->trans('Operation Mode', [], PayGreenClimateKit::DOMAIN_NAME),
                     'label_attr' => [

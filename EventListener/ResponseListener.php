@@ -56,7 +56,7 @@ class ResponseListener implements EventSubscriberInterface
      */
     public function beforeResponse(ResponseEvent $event): void
     {
-        if (TheliaRequest::$isAdminEnv) {
+        if (TheliaRequest::$isAdminEnv || str_contains($event->getRequest()->getRequestUri(), '/_wdt')) {
             return;
         }
 

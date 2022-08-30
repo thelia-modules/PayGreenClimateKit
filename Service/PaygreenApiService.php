@@ -21,6 +21,7 @@ namespace PayGreenClimateKit\Service;
 use Http\Client\Curl\Client;
 use Paygreen\Sdk\Climate\V2\Environment;
 use Paygreen\Sdk\Climate\V2\Model\WebBrowsingData;
+use PayGreenClimateKit\ClimateKitExt\ClientExt;
 use PayGreenClimateKit\PayGreenClimateKit;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Exception\TheliaProcessException;
@@ -129,6 +130,17 @@ class PaygreenApiService
 
     }
 
+    public function getCarbonEmissionFactor()
+    {
+        $response = $this->getClimateKitClient()->getEmissionFactors();
+
+        if (! $this->checkApiResponse('getEmissionFactors', $response)) {
+            return [];
+        }
+
+        $responseData = json_decode($response->getBody()->getContents());
+    }
+
     /**
      * @throws \Exception
      */
@@ -152,7 +164,7 @@ class PaygreenApiService
             $environment->setTestMode(true);
         }
 
-        $climateKitClient = new \Paygreen\Sdk\Climate\V2\Client($curl, $environment, Tlog::getInstance());
+        $climateKitClient = new ClientExt($curl, $environment, Tlog::getInstance());
 
         // Se connecter à PayGreen
         $response = $climateKitClient->login($accountName, $userName, $password);
@@ -165,6 +177,17 @@ class PaygreenApiService
         $climateKitClient->setBearer($responseData->access_token);
 
         return [$climateKitClient,  $responseData->access_token];
+    }
+
+    /**
+     * @param string $filePath
+     * @return void
+     */
+    public function sendShopCatalog(string $filePath)
+    {
+        $response = $this->getClimateKitClient()->exportProductCatalog($filePath);
+
+        return $this->checkApiResponse('exportProductCatalog', $response);
     }
 
     /**
@@ -187,10 +210,9 @@ class PaygreenApiService
      */
     protected function checkApiResponse(string $serviceName, $response): bool
     {
-        // @todo
-        $responseData = json_decode($response->getBody()->getContents());
+        if ($response->getStatusCode()< 200 && $response->getStatusCode()> 299) {
+            $responseData = json_decode($response->getBody()->getContents());
 
-        if ($responseData && isset($responseData->status) && (int) $responseData->status !== 200) {
             Tlog::getInstance()->error(
                 "Call to Paygreen service $serviceName failed : status:" . $responseData->status
                 . ", reason:" . $responseData->title
@@ -199,7 +221,6 @@ class PaygreenApiService
 
             return false;
         }
-
 
         return true;
     }

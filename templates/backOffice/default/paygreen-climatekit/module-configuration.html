@@ -38,12 +38,36 @@
                             <div class="col-md-4">
                                 <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Operation mode"}</p>
                                 {render_form_field field="mode" value=$mode}
+                                {render_form_field field="transportationExternalId" value=$transportationExternalId|default:'1-28022'}
                             </div>
                             <div class="col-md-4">
+                                <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Send your Catalog"}</p>
+
                                 <div class="alert alert-info">
-                                    {intl d='paygreenclimatekit.bo.default' l="You can download your catalog in a CSV format suitable to initialize the Climate Kit catalog in your PayGreen back-office"}
+                                    {intl d='paygreenclimatekit.bo.default' l="You can send your catalog to PayGreen to initialize your products in the Ckimate dashboard"}
                                 </div>
-                                <a class="btn btn-primary" href="/admin/module/paygreenClimatekit/downloadCatalog">{intl d='paygreenclimatekit.bo.default' l="Download your catalog"}</a>
+
+                                {if $smarty.get.uploadCatalogSuccess == 'n'}
+                                    <div class="alert alert-danger">
+                                        {intl d='paygreenclimatekit.bo.default' l="Upload to PayGreen failed, please try again."}
+                                    </div>
+                                {/if}
+
+                                {if $smarty.get.uploadCatalogSuccess == 'y'}
+                                    <div class="alert alert-success">
+                                        {intl d='paygreenclimatekit.bo.default' l="Your product catalog was successfully send to PayGreen."}
+                                    </div>
+                                {/if}
+                                <a class="btn btn-primary" href="/admin/module/paygreenClimatekit/sendCatalog">{intl d='paygreenclimatekit.bo.default' l="Send your catalog to PayGreen"}</a>
+
+                                <p>&nbsp;</p> {* berk *}
+                                <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Get your Catalog"}</p>
+
+                                <div class="alert alert-info">
+                                    {intl d='paygreenclimatekit.bo.default' l="You can also download your catalog and integrate it manually in the PayGreen Climate dashboard"}
+                                </div>
+
+                                <a class="btn btn-info" href="/admin/module/paygreenClimatekit/downloadCatalog">{intl d='paygreenclimatekit.bo.default' l="Download your catalog"}</a>
                             </div>
                         </div>
                     </form>

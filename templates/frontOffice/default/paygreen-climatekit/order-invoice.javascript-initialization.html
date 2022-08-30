@@ -30,6 +30,8 @@
         },
         banner: {
             addContributionAction: function(price) {
+                console.log("Contribution price ", price);
+
                 window.location.replace(
                     "{url path='/paygreen/compensation/add' price='__PRICE__'}".replace('__PRICE__', price)
                 );
@@ -60,7 +62,7 @@
                     country: "{loop type="country" name="dsf" id=$COUNTRY limit=1}{$TITLE}{/loop}"
                 {/loop}
             },
-            transportationExternalId: "1-28022",
+            transportationExternalId: "{$paygreenTransportationExternalId}",
             deliveryService : "{loop type="module" name="d" id={order attr="delivery_module"}}{$TITLE}{/loop}", // optionnal: set "Colissimo" if you use it
             items: [
                 {loop type="cart" name="df"}

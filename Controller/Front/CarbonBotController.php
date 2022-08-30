@@ -15,6 +15,7 @@
 namespace PayGreenClimateKit\Controller\Front;
 
 use PayGreenClimateKit\PayGreenClimateKit;
+use PayGreenClimateKit\Service\PaygreenApiService;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
@@ -38,7 +39,10 @@ class CarbonBotController extends BaseFrontController
     {
         $response = $this->generateRedirect(URL::getInstance()->absoluteUrl('/order/invoice'));
 
-        if (0 >= $price = (float) $request->get('price', 0)) {
+        // Price is in cents.
+        $price = round((float) $request->get('price', -1) / 100, 2);
+
+        if ($price <= 0) {
             return $response;
         }
 
@@ -85,5 +89,12 @@ class CarbonBotController extends BaseFrontController
         }
 
         return $this->generateRedirect(URL::getInstance()->absoluteUrl('/order/invoice'));
+    }
+
+    public function clearFootprint(PaygreenApiService $apiService)
+    {
+        $apiService->clearFootPrintId();
+
+        return new Response("OK");
     }
 }

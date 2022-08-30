@@ -105,6 +105,7 @@ class HookManager extends BaseHook
                 'paygreenToken' => $this->climateClient->getAccessToken(),
                 'paygreenFootprintId' => $this->climateClient->getFootPrintId(),
                 'paygreenTestMode' => $this->climateClient->isTestMode(),
+                'paygreenTransportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId', '1-28022'),
                 'paygreenContributionInCart' =>
                     null !== PayGreenClimateKit::findCompensationItemInCart(
                         $this->getSession(),
