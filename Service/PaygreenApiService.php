@@ -149,13 +149,12 @@ class PaygreenApiService
         $accountName = PayGreenClimateKit::getConfigValue('accountName');
         $userName = PayGreenClimateKit::getConfigValue('userName');
         $password = PayGreenClimateKit::getConfigValue('password');
-        $clientId = PayGreenClimateKit::getConfigValue('clientId');
         $testMode = $this->isTestMode();
 
         $curl = new Client();
 
         $environment = new Environment(
-            $clientId,
+            $accountName,
             Environment::ENVIRONMENT_PRODUCTION,
             Environment::API_VERSION_2
         );

@@ -42,9 +42,11 @@ class PayGreenClimateKit extends BaseModule
     public const DOMAIN_NAME = 'paygreenclimatekit';
 
     public const COMPENSATION_PRODUCT_REF = 'CLIMATEKIT-COMPENSATION';
+    public const DEFAULT_TRANSPORTATION_EXTERNAL_ID = '1-28022';
 
     /**
      * Create the product and the category that will be added to the cart to compensate carbon cost.
+     * @throws \Propel\Runtime\Exception\PropelException
      */
     public function postActivation(ConnectionInterface $con = null): void
     {
@@ -105,8 +107,12 @@ class PayGreenClimateKit extends BaseModule
             ->setBasePrice(0)
             ->setCurrencyId($currencyId)
             ->setBaseWeight(0)
-            ->setQuantity(5000000) // Large amount toi provide infinite stock (kind of)
             ;
+
+        $this->getDispatcher()->dispatch($updateProductEvent, TheliaEvents::PRODUCT_UPDATE);
+
+        // Infinite stock
+        $updateProductEvent->getProduct()->getDefaultSaleElements()->setQuantity(PHP_INT_MAX)->save();
 
         // Add product image
         $imagePath = __DIR__.DS.'Config'.DS.'images'.DS.'climate-kit-image.png';

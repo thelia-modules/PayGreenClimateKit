@@ -75,8 +75,8 @@ class HookManager extends BaseHook
             'accountName' => PayGreenClimateKit::getConfigValue('accountName'),
             'userName' => PayGreenClimateKit::getConfigValue('userName'),
             'password' => PayGreenClimateKit::getConfigValue('password'),
-            'clientId' => PayGreenClimateKit::getConfigValue('clientId'),
-            'mode'     => PayGreenClimateKit::getConfigValue('mode'),
+            'mode' => PayGreenClimateKit::getConfigValue('mode'),
+            'transportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId', PayGreenClimateKit::DEFAULT_TRANSPORTATION_EXTERNAL_ID),
         ];
 
         $event->add(
@@ -105,7 +105,8 @@ class HookManager extends BaseHook
                 'paygreenToken' => $this->climateClient->getAccessToken(),
                 'paygreenFootprintId' => $this->climateClient->getFootPrintId(),
                 'paygreenTestMode' => $this->climateClient->isTestMode(),
-                'paygreenTransportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId', '1-28022'),
+                'paygreenTransportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId'),
+                'paygreenCompensationProductRef' => PayGreenClimateKit::COMPENSATION_PRODUCT_REF,
                 'paygreenContributionInCart' =>
                     null !== PayGreenClimateKit::findCompensationItemInCart(
                         $this->getSession(),

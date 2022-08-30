@@ -33,12 +33,11 @@
                                 {render_form_field field="accountName" value=$accountName}
                                 {render_form_field field="userName" value=$userName}
                                 {render_form_field field="password" value=$password}
-                                {render_form_field field="clientId" value=$clientId}
                             </div>
                             <div class="col-md-4">
                                 <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Operation mode"}</p>
                                 {render_form_field field="mode" value=$mode}
-                                {render_form_field field="transportationExternalId" value=$transportationExternalId|default:'1-28022'}
+                                {render_form_field field="transportationExternalId" value=$transportationExternalId|default}
                             </div>
                             <div class="col-md-4">
                                 <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Send your Catalog"}</p>
@@ -47,13 +46,13 @@
                                     {intl d='paygreenclimatekit.bo.default' l="You can send your catalog to PayGreen to initialize your products in the Ckimate dashboard"}
                                 </div>
 
-                                {if $smarty.get.uploadCatalogSuccess == 'n'}
+                                {if $smarty.get.uploadCatalogSuccess|default:'' == 'n'}
                                     <div class="alert alert-danger">
                                         {intl d='paygreenclimatekit.bo.default' l="Upload to PayGreen failed, please try again."}
                                     </div>
                                 {/if}
 
-                                {if $smarty.get.uploadCatalogSuccess == 'y'}
+                                {if $smarty.get.uploadCatalogSuccess|default:'' == 'y'}
                                     <div class="alert alert-success">
                                         {intl d='paygreenclimatekit.bo.default' l="Your product catalog was successfully send to PayGreen."}
                                     </div>

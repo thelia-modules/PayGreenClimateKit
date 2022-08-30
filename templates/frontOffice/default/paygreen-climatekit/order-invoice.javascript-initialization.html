@@ -66,11 +66,14 @@
             deliveryService : "{loop type="module" name="d" id={order attr="delivery_module"}}{$TITLE}{/loop}", // optionnal: set "Colissimo" if you use it
             items: [
                 {loop type="cart" name="df"}
-                {
-                    productExternalReference: "{$REF}",
-                    quantity: {$QUANTITY},
-                    exTaxPriceInCents: {$TOTAL_PRICE} * 100 // price without tax in cent
-                }{if $LOOP_COUNT < $LOOP_TOTAL},{/if}
+                    {if $REF != $paygreenCompensationProductRef}
+                        {if $LOOP_COUNT > 1},{/if}
+                        {
+                            productExternalReference: "{$REF}",
+                            quantity: {$QUANTITY},
+                            exTaxPriceInCents: {$TOTAL_PRICE} * 100 // price without tax in cent
+                        }
+                {/if}
                 {/loop}
             ]
         }

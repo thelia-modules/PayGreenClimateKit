@@ -69,19 +69,6 @@ class ConfigForm extends BaseForm
                     ],
                 ]
             )->add(
-                'clientId',
-                TextType::class,
-                [
-                    'constraints' => [
-                        new NotBlank(),
-                    ],
-                    'label' => $translator->trans('PayGreen client ID', [], PayGreenClimateKit::DOMAIN_NAME),
-                    'label_attr' => [
-                        'for' => 'clientId',
-                        'help' => $translator->trans('You can request your Client ID from Paygreen', [], PayGreenClimateKit::DOMAIN_NAME),
-                    ],
-                ]
-            )->add(
                 'transportationExternalId',
                 TextType::class,
                 [
@@ -91,7 +78,11 @@ class ConfigForm extends BaseForm
                     'label' => $translator->trans('Identification for the emission factor of deliveries', [], PayGreenClimateKit::DOMAIN_NAME),
                     'label_attr' => [
                         'for' => 'transportationExternalId',
-                        'help' => $translator->trans('An identifiers to define carbon emission factor for order delivery. 1-28022 is a good choice for truck based deliveries.', [], PayGreenClimateKit::DOMAIN_NAME),
+                        'help' => $translator->trans(
+                            'An identifiers to define carbon emission factor for order delivery. '
+                            .PayGreenClimateKit::DEFAULT_TRANSPORTATION_EXTERNAL_ID
+                            .' is a good choice for truck based deliveries.', [], PayGreenClimateKit::DOMAIN_NAME
+                        ),
                     ],
                 ]
             )
