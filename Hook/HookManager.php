@@ -16,7 +16,7 @@ namespace PayGreenClimateKit\Hook;
 
 use PayGreenClimateKit\PayGreenClimateKit;
 use PayGreenClimateKit\Service\PaygreenApiService;
-use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
 use Thelia\Core\Template\Assets\AssetResolverInterface;
@@ -59,15 +59,14 @@ class HookManager extends BaseHook
                     "method" => "onOrderEditCartBottom"
                 ]
             ],
-            "order-invoice.javascript-initialization" => [
+            "main.javascript-initialization" => [
                 [
                     "type" => "front",
-                    "method" => "onOrderInvoiceJavascript"
+                    "method" => "onJavascriptInitialization"
                 ]
             ]
         ];
     }
-
 
     public function onModuleConfigure(HookRenderEvent $event): void
     {
@@ -77,6 +76,7 @@ class HookManager extends BaseHook
             'password' => PayGreenClimateKit::getConfigValue('password'),
             'mode' => PayGreenClimateKit::getConfigValue('mode'),
             'transportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId', PayGreenClimateKit::DEFAULT_TRANSPORTATION_EXTERNAL_ID),
+            'showCarbonBotOnAllPages' => (bool) PayGreenClimateKit::getConfigValue('showCarbonBotOnAllPages', 1),
         ];
 
         $event->add(
@@ -92,10 +92,12 @@ class HookManager extends BaseHook
     }
 
     /**
+     * Display carbon bot
+     *
      * @param HookRenderEvent $event
      * @return void
      */
-    public function onOrderInvoiceJavascript(HookRenderEvent $event): void
+    public function onJavascriptInitialization(HookRenderEvent $event): void
     {
         try {
             $userId = $this->climateClient->getCurrentUserId();
@@ -107,6 +109,7 @@ class HookManager extends BaseHook
                 'paygreenTestMode' => $this->climateClient->isTestMode(),
                 'paygreenTransportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId'),
                 'paygreenCompensationProductRef' => PayGreenClimateKit::COMPENSATION_PRODUCT_REF,
+                'paygreenCarbonBotOnAllPages' => (bool) PayGreenClimateKit::getConfigValue('showCarbonBotOnAllPages', 1) ? 'true' : 'false',
                 'paygreenContributionInCart' =>
                     null !== PayGreenClimateKit::findCompensationItemInCart(
                         $this->getSession(),
@@ -115,7 +118,7 @@ class HookManager extends BaseHook
             ];
 
             $event->add(
-                $this->render('paygreen-climatekit/order-invoice.javascript-initialization.html', $vars)
+                $this->render('paygreen-climatekit/main.javascript-initialization.html', $vars)
             );
         } catch (\Exception $ex) {
             Tlog::getInstance()->error("Failed to get Climate data from PayGreen API: " . $ex->getMessage());

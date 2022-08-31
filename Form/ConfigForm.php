@@ -14,6 +14,7 @@ namespace PayGreenClimateKit\Form;
 
 use PayGreenClimateKit\PayGreenClimateKit;
 use Symfony\Component\Form\Extension\Core\Type\ButtonType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -101,6 +102,17 @@ class ConfigForm extends BaseForm
                     'label_attr' => [
                         'for' => 'mode',
                         'help' => $translator->trans('Test or production mode', [], PayGreenClimateKit::DOMAIN_NAME),
+                    ],
+                ]
+            )->add(
+                'showCarbonBotOnAllPages',
+                CheckboxType::class,
+                [
+                    'required' => false,
+                    'label' => $translator->trans('Show the Carbon Bot on all pages', [], PayGreenClimateKit::DOMAIN_NAME),
+                    'label_attr' => [
+                        'for' => 'mode',
+                        'help' => $translator->trans('If this box is checked, your customers will get carbon cost information on all shop pages.', [], PayGreenClimateKit::DOMAIN_NAME),
                     ],
                 ]
             );
