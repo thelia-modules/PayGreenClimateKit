@@ -25,6 +25,7 @@ use TheliaSmarty\Template\SmartyParser;
 
 class HookManager extends BaseHook
 {
+    protected const BASE_THEME_COLOR_CARBON_BOT = '#556B2F';
     protected PaygreenApiService $climateClient;
 
     public function __construct(
@@ -59,10 +60,10 @@ class HookManager extends BaseHook
                     "method" => "onOrderEditCartBottom"
                 ]
             ],
-            "main.javascript-initialization" => [
+            "main.body-bottom" => [
                 [
                     "type" => "front",
-                    "method" => "onJavascriptInitialization"
+                    "method" => "onBodyBottom"
                 ]
             ]
         ];
@@ -77,6 +78,7 @@ class HookManager extends BaseHook
             'mode' => PayGreenClimateKit::getConfigValue('mode'),
             'transportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId', PayGreenClimateKit::DEFAULT_TRANSPORTATION_EXTERNAL_ID),
             'showCarbonBotOnAllPages' => (bool) PayGreenClimateKit::getConfigValue('showCarbonBotOnAllPages', 1),
+            'colorThemeCarbonBot' => PayGreenClimateKit::getConfigValue('colorThemeCarbonBot', self::BASE_THEME_COLOR_CARBON_BOT),
         ];
 
         $event->add(
@@ -97,7 +99,7 @@ class HookManager extends BaseHook
      * @param HookRenderEvent $event
      * @return void
      */
-    public function onJavascriptInitialization(HookRenderEvent $event): void
+    public function onBodyBottom(HookRenderEvent $event): void
     {
         try {
             $userId = $this->climateClient->getCurrentUserId();
@@ -110,6 +112,7 @@ class HookManager extends BaseHook
                 'paygreenTransportationExternalId' => PayGreenClimateKit::getConfigValue('transportationExternalId'),
                 'paygreenCompensationProductRef' => PayGreenClimateKit::COMPENSATION_PRODUCT_REF,
                 'paygreenCarbonBotOnAllPages' => (bool) PayGreenClimateKit::getConfigValue('showCarbonBotOnAllPages', 1) ? 'true' : 'false',
+                'colorThemeCarbonBot' => PayGreenClimateKit::getConfigValue('colorThemeCarbonBot', self::BASE_THEME_COLOR_CARBON_BOT),
                 'paygreenContributionInCart' =>
                     null !== PayGreenClimateKit::findCompensationItemInCart(
                         $this->getSession(),
@@ -118,7 +121,7 @@ class HookManager extends BaseHook
             ];
 
             $event->add(
-                $this->render('paygreen-climatekit/main.javascript-initialization.html', $vars)
+                $this->render('paygreen-climatekit/main.body-bottom.html', $vars)
             );
         } catch (\Exception $ex) {
             Tlog::getInstance()->error("Failed to get Climate data from PayGreen API: " . $ex->getMessage());

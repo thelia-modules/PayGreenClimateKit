@@ -9,7 +9,7 @@
         <div class="form-container">
             <div class="row">
                 <div class="col-md-12">
-                    {form name="paygreenClimatekit_configuration"}
+                    {form name=\PayGreenClimateKit\Form\ConfigForm::getName()}
                     <form action="{url path="/admin/module/paygreenClimatekit/configure"}" method="post">
                         {form_hidden_fields}
 
@@ -39,6 +39,12 @@
                                 {render_form_field field="mode" value=$mode}
                                 {render_form_field field="showCarbonBotOnAllPages" value=$showCarbonBotOnAllPages}
                                 {render_form_field field="transportationExternalId" value=$transportationExternalId|default}
+                                {form_field field="colorThemeCarbonBot"}
+                                    <div class="form-group {if $error}has-error{/if}">
+                                        <label for="{$label_attr.for|default:null}" class="control-label">{intl l={$label}} : </label>
+                                        <input type="color" id="{$label_attr.for|default:null}" name="{$name}" class="form-control" value="{$colorThemeCarbonBot}" title="{intl l={$label}}">
+                                    </div>
+                                {/form_field}
                             </div>
                             <div class="col-md-4">
                                 <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Send your Catalog"}</p>
@@ -60,7 +66,8 @@
                                 {/if}
                                 <a class="btn btn-primary" href="/admin/module/paygreenClimatekit/sendCatalog">{intl d='paygreenclimatekit.bo.default' l="Send your catalog to PayGreen"}</a>
 
-                                <p>&nbsp;</p> {* berk *}
+                                <br>
+                                <br>
                                 <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Get your Catalog"}</p>
 
                                 <div class="alert alert-info">

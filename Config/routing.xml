@@ -20,11 +20,22 @@
         <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::clearFootprint</default>
     </route>
 
+    <!-- Routing for CarbonBot -->
+    <!-- Default template -->
     <route id="paygreenClimatekit.addCarbonCompensation" path="/paygreen/compensation/add">
         <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::addCarbonCompensationToCartAction</default>
     </route>
 
     <route id="paygreenClimatekit.removeCarbonCompensation" path="/paygreen/compensation/remove">
       <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::removeCarbonCompensationFromCartAction</default>
+    </route>
+
+    <!-- Modern template -->
+    <route id="paygreenClimatekit.modern.addCarbonCompensation" path="/paygreen/modern/compensation/add">
+        <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::addModernCarbonCompensationToCartAction</default>
+    </route>
+
+    <route id="paygreenClimatekit.modern.removeCarbonCompensation" path="/paygreen/modern/compensation/remove">
+        <default key="_controller">PayGreenClimateKit\Controller\Front\CarbonBotController::removeModernCarbonCompensationToCartAction</default>
     </route>
 </routes>
