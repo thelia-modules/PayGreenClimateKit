@@ -18,7 +18,6 @@
         // Create the banner placeholder
         paymentMethod.parentNode.insertBefore(div, paymentMethod);
         showBannerWidget = true;
-        carbonInit();
     }
 
     // MODERN template
@@ -35,11 +34,14 @@
             for(const mutation of mutationsList) {
                     if (canPass && mutation.target.classList.contains(classToCheck)) {
                         canPass = false;
-
                         // Create the banner placeholder
                         checkoutFlow.querySelector('section > div:not([class])').appendChild(div);
                         showBannerWidget = true;
-                        carbonInit();
+                         carbonBot.updateConfig({
+                            banner: {
+                                displayed: showBannerWidget
+                            }
+                        });
 
                         observer.disconnect();
                     }
@@ -49,6 +51,8 @@
         const config = { subtree: true, attributes: true, attributeFilter: ['class'], };
         observer.observe(document.getElementById('Checkout'), config);
     }
+
+    carbonInit();
     /**/
 
     {if $app->debug}
