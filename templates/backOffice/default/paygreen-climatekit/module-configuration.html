@@ -39,12 +39,9 @@
                                 {render_form_field field="mode" value=$mode}
                                 {render_form_field field="showCarbonBotOnAllPages" value=$showCarbonBotOnAllPages}
                                 {render_form_field field="transportationExternalId" value=$transportationExternalId|default}
-                                {form_field field="colorThemeCarbonBot"}
-                                    <div class="form-group {if $error}has-error{/if}">
-                                        <label for="{$label_attr.for|default:null}" class="control-label">{intl l={$label}} : </label>
-                                        <input type="color" id="{$label_attr.for|default:null}" name="{$name}" class="form-control" value="{$colorThemeCarbonBot}" title="{intl l={$label}}">
-                                    </div>
-                                {/form_field}
+                                {custom_render_form_field field="colorThemeCarbonBot"}
+                                    <input type="color" {form_field_attributes field="colorThemeCarbonBot" value=$colorThemeCarbonBot}}>
+                                {/custom_render_form_field}
                             </div>
                             <div class="col-md-4">
                                 <p class="title title-without-tabs">{intl d='paygreenclimatekit.bo.default' l="Send your Catalog"}</p>

@@ -123,7 +123,7 @@ class ConfigForm extends BaseForm
                     'required' => false,
                     'label' => $translator->trans('Choose color theme', [], PayGreenClimateKit::DOMAIN_NAME),
                     'label_attr' => [
-                        'for' => 'mode',
+                        'for' => 'colorThemeCarbonBot',
                         'help' => $translator->trans('To match your theme store, choose a color for the carbonBot', [], PayGreenClimateKit::DOMAIN_NAME),
                     ],
                 ]

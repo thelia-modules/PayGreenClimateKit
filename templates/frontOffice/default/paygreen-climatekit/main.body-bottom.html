@@ -32,20 +32,20 @@
 
         const observer = new MutationObserver((mutationsList) => {
             for(const mutation of mutationsList) {
-                    if (canPass && mutation.target.classList.contains(classToCheck)) {
-                        canPass = false;
-                        // Create the banner placeholder
-                        checkoutFlow.querySelector('section > div:not([class])').appendChild(div);
-                        showBannerWidget = true;
-                         carbonBot.updateConfig({
-                            banner: {
-                                displayed: showBannerWidget
-                            }
-                        });
+                if (canPass && mutation.target.classList.contains(classToCheck)) {
+                    canPass = false;
+                    // Create the banner placeholder
+                    checkoutFlow.querySelector('section > div:not([class])').appendChild(div);
+                    showBannerWidget = true;
+                    carbonBot.updateConfig({
+                        banner: {
+                            displayed: showBannerWidget
+                        }
+                    });
 
-                        observer.disconnect();
-                    }
+                    observer.disconnect();
                 }
+            }
         });
 
         const config = { subtree: true, attributes: true, attributeFilter: ['class'], };
@@ -56,7 +56,7 @@
     /**/
 
     {if $app->debug}
-        console.log('user:{$paygreenUser}, footprint:{$paygreenFootprintId}, token:{$paygreenToken}');
+    console.log('user:{$paygreenUser}, footprint:{$paygreenFootprintId}, token:{$paygreenToken}');
     {/if}
 
     function carbonInit() {
@@ -81,39 +81,42 @@
                 banner: {
                     addContributionAction: function(price) {
                         {if $app->debug}
-                            console.log("Contribution price ", price);
+                        console.log("Contribution price ", price);
                         {/if}
 
+                        let url = "{url path='__URL__' price='__PRICE__'}".replace('__URL__', urlAddContribution).replace('__PRICE__', price);
+
                         if ('default' === template) {
-                            window.location.replace(
-                                "{url path='__URL__' price='__PRICE__'}".replace('__URL__', urlAddContribution).replace('__PRICE__', price)
-                            );
+                            window.location.replace(url);
                             return;
                         }
 
-                        fetch("{url path='__URL__' price='__PRICE__'}".replace('__URL__', urlAddContribution).replace('__PRICE__', price))
-                        .then((_) => {
-                            // on utilise le flow de react pour invalider le cart et le mettre à jour pour être synchro avec le back
-                            window.apiUtils.queryClient.invalidateQueries('cart');
-                            carbonBot.updateConfig({
-                                banner: {
-                                    hasContributionInCart: true
-                                }
-                            });
-                        })
-                        .catch(console.log);
+                        fetch(url)
+                            .then((_) => {
+                                // on utilise le flow de react pour invalider le cart et le mettre à jour pour être synchro avec le back
+                                window.apiUtils.queryClient.invalidateQueries('cart');
+                                carbonBot.updateConfig({
+                                    banner: {
+                                        hasContributionInCart: true
+                                    }
+                                });
+                            })
+                            .catch(console.log);
                     },
                     removeContributionAction: function(hasPrice) {
                         // prevent off and on if changing association
-                        if (hasPrice) {
-                            if ('default' === template) {
-                                window.location.replace(
-                                    "{url path='__URL__'}".replace('__URL__', urlRemoveContribution)
-                                );
-                                return;
-                            }
+                        if (! hasPrice) {
+                            return;
+                        }
 
-                            fetch("{url path='__URL__'}".replace('__URL__', urlRemoveContribution))
+                        let url = "{url path='__URL__'}".replace('__URL__', urlRemoveContribution);
+
+                        if ('default' === template) {
+                            window.location.replace(url);
+                            return;
+                        }
+
+                        fetch(url)
                             .then((_) => {
                                 // on utilise le flow de react pour invalider le cart et le mettre à jour pour être synchro avec le back
                                 window.apiUtils.queryClient.invalidateQueries('cart');
@@ -124,7 +127,6 @@
                                 });
                             })
                             .catch(console.log);
-                        }
                     },
                     hasContributionInCart: {($paygreenContributionInCart) ? 'true' : 'false'}, // boolean, whether the contribution is in the cart or not
                     displayed: showBannerWidget
@@ -142,22 +144,22 @@
                     shippingToAddress: {
                         {loop type="address" name="delivery-address" id={order attr="delivery_address"}}
                         street: '{$ADDRESS1|replace:"'":"\\'"} {$ADDRESS2|replace:"'":"\\'"} {$ADDRESS3|replace:"'":"\\'"}',
-                            city: '{$CITY|replace:"'":"\\'"}',
-                            postcode: '{$ZIPCODE}',
-                            country: "{loop type="country" name="dsf" id=$COUNTRY limit=1}{$TITLE}{/loop}"
+                        city: '{$CITY|replace:"'":"\\'"}',
+                        postcode: '{$ZIPCODE}',
+                        country: "{loop type="country" name="dsf" id=$COUNTRY limit=1}{$TITLE}{/loop}"
                         {/loop}
                     },
                     transportationExternalId: "{$paygreenTransportationExternalId}",
                     deliveryService : "{loop type="module" name="d" id={order attr="delivery_module"}}{$TITLE}{/loop}", // optionnal: set "Colissimo" if you use it
                     items: [
                         {loop type="cart" name="df"}
-                            {if $REF != $paygreenCompensationProductRef}
-                                {if $LOOP_COUNT > 1},{/if}
-                                {
-                                    productExternalReference: "{$REF}",
-                                    quantity: {$QUANTITY},
-                                    exTaxPriceInCents: {$TOTAL_PRICE} * 100 // price without tax in cent
-                                }
+                        {if $REF != $paygreenCompensationProductRef}
+                        {if $LOOP_COUNT > 1},{/if}
+                        {
+                            productExternalReference: "{$REF}",
+                            quantity: {$QUANTITY},
+                            exTaxPriceInCents: {$TOTAL_PRICE} * 100 // price without tax in cent
+                        }
                         {/if}
                         {/loop}
                     ]

@@ -16,15 +16,14 @@ namespace PayGreenClimateKit\Controller\Front;
 
 use PayGreenClimateKit\PayGreenClimateKit;
 use PayGreenClimateKit\Service\PaygreenApiService;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Cart\CartEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\JsonResponse;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\HttpFoundation\Session\Session;
-use Thelia\Model\Product;
 use Thelia\Model\ProductQuery;
 use Thelia\Tools\URL;
 
@@ -39,24 +38,11 @@ class CarbonBotController extends BaseFrontController
      */
     public function addCarbonCompensationToCartAction(Request $request, Session $session, EventDispatcherInterface $eventDispatcher): Response
     {
-        $response = $this->generateRedirect(URL::getInstance()->absoluteUrl('/order/invoice'));
+        $this->updateItemAddedToCart($request, $session, $eventDispatcher);
 
-        // Price is in cents.
-        $price = round((float) $request->get('price', -1) / 100, 2);
-
-        if ($price <= 0) {
-            return $response;
-        }
-
-        if (null === $product = ProductQuery::create()->findOneByRef(PayGreenClimateKit::COMPENSATION_PRODUCT_REF)) {
-            return $response;
-        }
-    
-        $this->updateItemAddedToCart($product, $price, $session, $eventDispatcher);
-
-        return $response;
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl('/order/invoice'));
     }
-    
+
     /**
      * @param Request $request
      * @param Session $session
@@ -66,24 +52,11 @@ class CarbonBotController extends BaseFrontController
      */
     public function addModernCarbonCompensationToCartAction(Request $request, Session $session, EventDispatcherInterface $eventDispatcher): JsonResponse|Response
     {
-        $response = new JsonResponse([]);
-        
-        // Price is in cents.
-        $price = round((float) $request->get('price', -1) / 100, 2);
-        
-        if ($price <= 0) {
-            return $response;
-        }
-        
-        if (null === $product = ProductQuery::create()->findOneByRef(PayGreenClimateKit::COMPENSATION_PRODUCT_REF)) {
-            return $response;
-        }
-        
-        $this->updateItemAddedToCart($product, $price, $session, $eventDispatcher);
-        
-        return $response;
+        $this->updateItemAddedToCart($request, $session, $eventDispatcher);
+
+        return new JsonResponse([]);
     }
-    
+
     /**
      * @param Session $session
      * @param EventDispatcherInterface $eventDispatcher
@@ -114,9 +87,20 @@ class CarbonBotController extends BaseFrontController
 
         return new Response("OK");
     }
-    
-    protected function updateItemAddedToCart(Product $product, $price, Session $session, EventDispatcherInterface $eventDispatcher): void
+
+    protected function updateItemAddedToCart(Request $request, Session $session, EventDispatcherInterface $eventDispatcher): void
     {
+        // Price is in cents.
+        $price = round((float) $request->get('price', -1) / 100, 2);
+
+        if ($price <= 0) {
+            return;
+        }
+
+        if (null === $product = ProductQuery::create()->findOneByRef(PayGreenClimateKit::COMPENSATION_PRODUCT_REF)) {
+            return;
+        }
+
         // Update product price in cart if it is already present
         if (null === $cartItem = PayGreenClimateKit::findCompensationItemInCart($session, $eventDispatcher)) {
             // Create
@@ -124,12 +108,12 @@ class CarbonBotController extends BaseFrontController
                 ->setQuantity(1)
                 ->setProduct($product->getId())
                 ->setProductSaleElementsId($product->getDefaultSaleElements()->getId());
-        
+
             $eventDispatcher->dispatch($cartEvent, TheliaEvents::CART_ADDITEM);
-        
+
             $cartItem = $cartEvent->getCartItem();
         }
-    
+
         // Update cartItem price
         $cartItem
             ->setPrice($price)
@@ -137,13 +121,13 @@ class CarbonBotController extends BaseFrontController
             ->setPromoPrice($price)
             ->save();
     }
-    
+
     protected function updateItemRemovedToCart(Session $session, EventDispatcherInterface $eventDispatcher): void
     {
         if (null !== $cartItem = PayGreenClimateKit::findCompensationItemInCart($session, $eventDispatcher)) {
             $cartEvent = (new CartEvent($session->getSessionCart($eventDispatcher)))
                 ->setCartItemId($cartItem->getId());
-        
+
             $eventDispatcher->dispatch($cartEvent, TheliaEvents::CART_DELETEITEM);
         }
     }
