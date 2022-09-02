@@ -60,10 +60,10 @@ class HookManager extends BaseHook
                     "method" => "onOrderEditCartBottom"
                 ]
             ],
-            "main.body-top" => [
+            "main.body-bottom" => [
                 [
                     "type" => "front",
-                    "method" => "onBodyTop"
+                    "method" => "onBodyBottom"
                 ]
             ]
         ];
@@ -99,7 +99,7 @@ class HookManager extends BaseHook
      * @param HookRenderEvent $event
      * @return void
      */
-    public function onBodyTop(HookRenderEvent $event): void
+    public function onBodyBottom(HookRenderEvent $event): void
     {
         try {
             $userId = $this->climateClient->getCurrentUserId();
@@ -121,7 +121,7 @@ class HookManager extends BaseHook
             ];
 
             $event->add(
-                $this->render('paygreen-climatekit/main.body-top.html', $vars)
+                $this->render('paygreen-climatekit/main.body-bottom.html', $vars)
             );
         } catch (\Exception $ex) {
             Tlog::getInstance()->error("Failed to get Climate data from PayGreen API: " . $ex->getMessage());
