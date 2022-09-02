@@ -18,12 +18,12 @@
         // Create the banner placeholder
         paymentMethod.parentNode.insertBefore(div, paymentMethod);
         showBannerWidget = true;
-        carbonInit();
     }
 
     // MODERN template
     if (checkoutFlow) {
         template = 'modern';
+        div.style.position = 'relative';
         urlAddContribution = "paygreen/modern/compensation/add";
         urlRemoveContribution = "paygreen/modern/compensation/remove";
         const classToCheck = "PhoneCheck";
@@ -34,21 +34,26 @@
             for(const mutation of mutationsList) {
                     if (canPass && mutation.target.classList.contains(classToCheck)) {
                         canPass = false;
-
                         // Create the banner placeholder
                         checkoutFlow.querySelector('section > div:not([class])').appendChild(div);
                         showBannerWidget = true;
-                        carbonInit();
+                         carbonBot.updateConfig({
+                            banner: {
+                                displayed: showBannerWidget
+                            }
+                        });
 
                         observer.disconnect();
                     }
                 }
         });
 
-        const config = { childList: false, subtree: true, attributes: true, attributeFilter: [ 'class'], };
+        const config = { subtree: true, attributes: true, attributeFilter: ['class'], };
         observer.observe(document.getElementById('Checkout'), config);
     }
-    /***/
+
+    carbonInit();
+    /**/
 
     {if $app->debug}
         console.log('user:{$paygreenUser}, footprint:{$paygreenFootprintId}, token:{$paygreenToken}');
@@ -98,25 +103,28 @@
                         })
                         .catch(console.log);
                     },
-                    removeContributionAction: function() {
-                        if ('default' === template) {
-                            window.location.replace(
-                                "{url path='__URL__'}".replace('__URL__', urlRemoveContribution)
-                            );
-                            return;
-                        }
+                    removeContributionAction: function(hasPrice) {
+                        // prevent off and on if changing association
+                        if (hasPrice) {
+                            if ('default' === template) {
+                                window.location.replace(
+                                    "{url path='__URL__'}".replace('__URL__', urlRemoveContribution)
+                                );
+                                return;
+                            }
 
-                        fetch("{url path='__URL__'}".replace('__URL__', urlRemoveContribution))
-                        .then((_) => {
-                            // on utilise le flow de react pour invalider le cart et le mettre à jour pour être synchro avec le back
-                            window.apiUtils.queryClient.invalidateQueries('cart');
-                            carbonBot.updateConfig({
-                                banner: {
-                                    hasContributionInCart: false
-                                }
-                            });
-                        })
-                        .catch(console.log);
+                            fetch("{url path='__URL__'}".replace('__URL__', urlRemoveContribution))
+                            .then((_) => {
+                                // on utilise le flow de react pour invalider le cart et le mettre à jour pour être synchro avec le back
+                                window.apiUtils.queryClient.invalidateQueries('cart');
+                                carbonBot.updateConfig({
+                                    banner: {
+                                        hasContributionInCart: false
+                                    }
+                                });
+                            })
+                            .catch(console.log);
+                        }
                     },
                     hasContributionInCart: {($paygreenContributionInCart) ? 'true' : 'false'}, // boolean, whether the contribution is in the cart or not
                     displayed: showBannerWidget
