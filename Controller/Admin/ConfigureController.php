@@ -13,6 +13,7 @@
  */
 namespace PayGreenClimateKit\Controller\Admin;
 
+use PayGreenClimateKit\Form\ConfigForm;
 use PayGreenClimateKit\PayGreenClimateKit;
 use PayGreenClimateKit\Service\PaygreenApiService;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,7 +39,7 @@ class ConfigureController extends BaseAdminController
             return $response;
         }
 
-        $configurationForm = $this->createForm('paygreenClimatekit_configuration');
+        $configurationForm = $this->createForm(ConfigForm::getName());
 
         try {
             $form = $this->validateForm($configurationForm);

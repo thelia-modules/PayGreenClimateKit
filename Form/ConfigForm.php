@@ -16,6 +16,7 @@ use PayGreenClimateKit\PayGreenClimateKit;
 use Symfony\Component\Form\Extension\Core\Type\ButtonType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\ColorType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -115,14 +116,17 @@ class ConfigForm extends BaseForm
                         'help' => $translator->trans('If this box is checked, your customers will get carbon cost information on all shop pages.', [], PayGreenClimateKit::DOMAIN_NAME),
                     ],
                 ]
+            )->add(
+                'colorThemeCarbonBot',
+                ColorType::class,
+                [
+                    'required' => false,
+                    'label' => $translator->trans('Choose color theme', [], PayGreenClimateKit::DOMAIN_NAME),
+                    'label_attr' => [
+                        'for' => 'mode',
+                        'help' => $translator->trans('To match your theme store, choose a color for the carbonBot', [], PayGreenClimateKit::DOMAIN_NAME),
+                    ],
+                ]
             );
-    }
-
-    /**
-     * @return string the name of you form. This name must be unique
-     */
-    public static function getName(): string
-    {
-        return 'ClimateKitConfig';
     }
 }

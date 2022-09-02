@@ -1,0 +1,151 @@
+<script>
+    // create and call carbonBot script at the end of the body
+    const script = document.createElement("script");
+    const urlScript = "https://carbonbot.paygreen.fr/1.2/carbon-bot.js";
+    script.src = urlScript;
+    document.body.appendChild(script);
+
+    script.addEventListener('load', () => {
+        const paymentMethod = document.getElementById("payment-method");
+        const checkoutFlow = document.getElementById('Checkout');
+        const div = document.createElement('div');
+        div.setAttribute('data-paygreen-carbon-banner', "");
+        let showBannerWidget = false;
+        let urlAddContribution;
+        let urlRemoveContribution;
+        let template = 'default';
+
+        /** If we're on the invoice page show the contribution banner, otherwise juste show the carbon bot */
+        // DEFAULT template
+        if (paymentMethod) {
+            urlAddContribution = "/paygreen/compensation/add";
+            urlRemoveContribution = "/paygreen/compensation/remove";
+
+            // Create the banner placeholder
+            paymentMethod.parentNode.insertBefore(div, paymentMethod);
+            showBannerWidget = true;
+            carbonInit();
+        }
+
+        // MODERN template
+        if (checkoutFlow) {
+            template = 'modern';
+            urlAddContribution = "paygreen/modern/compensation/add";
+            urlRemoveContribution = "paygreen/modern/compensation/remove";
+            const classToCheck = "PhoneCheck";
+            // avoid multiple creation
+            let canPass = true;
+
+            const observer = new MutationObserver((mutationsList) => {
+                for(const mutation of mutationsList) {
+                        if (canPass && mutation.target.classList.contains(classToCheck)) {
+                            canPass = false;
+
+                            // Create the banner placeholder
+                            checkoutFlow.querySelector('section > div:not([class])').appendChild(div);
+                            showBannerWidget = true;
+                            carbonInit();
+
+                            observer.disconnect();
+                        }
+                    }
+            });
+
+            const config = { childList: false, subtree: true, attributes: true, attributeFilter: [ 'class'], };
+            observer.observe(document.getElementById('Checkout'), config);
+        }
+        /***/
+
+        {if $app->debug}
+            console.log('user:{$paygreenUser}, footprint:{$paygreenFootprintId}, token:{$paygreenToken}');
+        {/if}
+
+        function carbonInit() {
+            if (showBannerWidget || {$paygreenCarbonBotOnAllPages|default:'true'}) {
+
+                // Initialize the Carbon Bot Cf. https://github.com/PayGreen/carbon-bot-doc
+                carbonBot.init({
+                    endpoint: "https://api-climatekit.paygreen.fr",
+                    testMode: {($paygreenTestMode) ? 'true' : 'false'},
+                    locale: "{lang attr='code'}",
+                    shopName: "{config key='store_name'}",
+                    bot: {
+                        user: {$paygreenUser},
+                        footprint: "{$paygreenFootprintId}",
+                        token: "{$paygreenToken}",
+                        position: "right",
+                        colors: {
+                            primary: "{$colorThemeCarbonBot}",
+                        },
+                        displayed: true
+                    },
+                    banner: {
+                        addContributionAction: function(price) {
+                            console.log("Contribution price ", price);
+
+                            if ('default' === template) {
+                                window.location.replace(
+                                    "{url path='__URL__' price='__PRICE__'}".replace('__URL__', urlAddContribution).replace('__PRICE__', price)
+                                );
+                                return;
+                            }
+
+                            fetch("{url path='__URL__' price='__PRICE__'}".replace('__URL__', urlAddContribution).replace('__PRICE__', price))
+                            .then((res) => {
+                                console.log(res);
+                            });
+                        },
+                        removeContributionAction: function() {
+                            if ('default' === template) {
+                                window.location.replace(
+                                    "{url path='__URL__'}".replace('__URL__', urlRemoveContribution)
+                                );
+                                return;
+                            }
+
+                            fetch("{url path='__URL__'}".replace('__URL__', urlRemoveContribution))
+                            .then((res) => {
+                                console.log(res);
+                            })
+                        },
+                        hasContributionInCart: {($paygreenContributionInCart) ? 'true' : 'false'}, // boolean, whether the contribution is in the cart or not
+                        displayed: showBannerWidget
+                    },
+                    // Cart content
+                    cart: {
+                        price: {cart attr="total_taxed_price"}, // current cart price in cent
+                        weight: {cart attr="weight"}, // current cart weight in kg
+                        shippingFromAddress: {
+                            street: "{config key='store_address1'}",
+                            city: "{config key='store_city'}",
+                            postcode: "{config key='store_zipcode'}",
+                            country: "{loop type="country" name="dsf" id={config key="store_country"}}{$TITLE}{/loop}"
+                        },
+                        shippingToAddress: {
+                            {loop type="address" name="delivery-address" id={order attr="delivery_address"}}
+                            street: '{$ADDRESS1|replace:"'":"\\'"} {$ADDRESS2|replace:"'":"\\'"} {$ADDRESS3|replace:"'":"\\'"}',
+                                city: '{$CITY|replace:"'":"\\'"}',
+                                postcode: '{$ZIPCODE}',
+                                country: "{loop type="country" name="dsf" id=$COUNTRY limit=1}{$TITLE}{/loop}"
+                            {/loop}
+                        },
+                        transportationExternalId: "{$paygreenTransportationExternalId}",
+                        deliveryService : "{loop type="module" name="d" id={order attr="delivery_module"}}{$TITLE}{/loop}", // optionnal: set "Colissimo" if you use it
+                        items: [
+                            {loop type="cart" name="df"}
+                                {if $REF != $paygreenCompensationProductRef}
+                                    {if $LOOP_COUNT > 1},{/if}
+                                    {
+                                        productExternalReference: "{$REF}",
+                                        quantity: {$QUANTITY},
+                                        exTaxPriceInCents: {$TOTAL_PRICE} * 100 // price without tax in cent
+                                    }
+                            {/if}
+                            {/loop}
+                        ]
+                    }
+                });
+            }
+        }
+    });
+</script>
